@@ -92,6 +92,14 @@ spec:
                       an S3 bucket. When the workspace's source is 'Inline' the content
                       of a simple main.tf file may be written inline.
                     type: string
+                  outputFormat:
+                    default: String
+                    description: Output Format.  Defines the format of the status.atProvider.ouputs
+                      values
+                    enum:
+                    - String
+                    - Nested
+                    type: string
                   planArgs:
                     description: Arguments to be included in the terraform plan CLI
                       command

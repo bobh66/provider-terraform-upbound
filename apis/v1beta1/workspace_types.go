@@ -90,6 +90,16 @@ const (
 	ModuleSourceInline ModuleSource = "Inline"
 )
 
+// An OutputFormat represents the format of the terraform module outputs
+// +kubebuilder:validation:Enum=String;Nested
+type OutputFormat string
+
+// Output Formats
+const (
+	OutputFormatString OutputFormat = "String"
+	OutputFormatNested OutputFormat = "Nested"
+)
+
 // WorkspaceParameters are the configurable fields of a Workspace.
 type WorkspaceParameters struct {
 	// The root module of this workspace; i.e. the module containing its main.tf
@@ -114,6 +124,11 @@ type WorkspaceParameters struct {
 	// Terraform Variable Map. Should be a valid JSON representation of the input vars
 	// +optional
 	VarMap *runtime.RawExtension `json:"varmap,omitempty"`
+
+	// Output Format.  Defines the format of the status.atProvider.ouputs values
+	// +kubebuilder:default="String"
+	// +optional
+	Format OutputFormat `json:"outputFormat,omitempty"`
 
 	// Files of configuration variables. Explicitly declared vars take
 	// precedence.

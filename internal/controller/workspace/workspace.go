@@ -336,7 +336,7 @@ func (c *external) Observe(ctx context.Context, mg resource.Managed) (managed.Ex
 	if err != nil {
 		return managed.ExternalObservation{}, errors.Wrap(err, errOutputs)
 	}
-	cr.Status.AtProvider = generateWorkspaceObservation(op)
+	cr.Status.AtProvider = generateWorkspaceObservation(op, cr.Spec.ForProvider.Format)
 
 	checksum, err := c.tf.GenerateChecksum(ctx)
 	if err != nil {
@@ -385,7 +385,7 @@ func (c *external) Update(ctx context.Context, mg resource.Managed) (managed.Ext
 	if err != nil {
 		return managed.ExternalUpdate{}, errors.Wrap(err, errOutputs)
 	}
-	cr.Status.AtProvider = generateWorkspaceObservation(op)
+	cr.Status.AtProvider = generateWorkspaceObservation(op, cr.Spec.ForProvider.Format)
 	// TODO(negz): Allow Workspaces to optionally derive their readiness from an
 	// output - similar to the logic XRs use to derive readiness from a field of
 	// a composed resource.
@@ -473,14 +473,19 @@ func op2cd(o []terraform.Output) managed.ConnectionDetails {
 
 // generateWorkspaceObservation is used to produce v1beta1.WorkspaceObservation from
 // workspace_type.Workspace.
-func generateWorkspaceObservation(op []terraform.Output) v1beta1.WorkspaceObservation {
+func generateWorkspaceObservation(op []terraform.Output, f v1beta1.OutputFormat) v1beta1.WorkspaceObservation {
 	wo := v1beta1.WorkspaceObservation{
 		Outputs: make(map[string]extensionsV1.JSON, len(op)),
 	}
 	for _, o := range op {
 		if !o.Sensitive {
 			if j, err := o.JSONValue(); err == nil {
-				wo.Outputs[o.Name] = extensionsV1.JSON{Raw: j}
+				if f == v1beta1.OutputFormatString {
+					v := []byte(string(j))
+					wo.Outputs[o.Name] = extensionsV1.JSON{Raw: v}
+				} else {
+					wo.Outputs[o.Name] = extensionsV1.JSON{Raw: j}
+				}
 			}
 		}
 	}
